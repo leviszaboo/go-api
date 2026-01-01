@@ -20,9 +20,25 @@ func (s *Store) CreateUser(user types.User) error {
 	return nil
 }
 
-// GetUserByID implements [types.UserStore].
 func (s *Store) GetUserByID(id string) (*types.User, error) {
-	panic("unimplemented")
+	rows, err := s.db.Query("SELECT * FROM users WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(types.User)
+	for rows.Next() {
+		u, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if u.ID == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	return u, nil
 }
 
 func NewStore(db *sql.DB) *Store {
